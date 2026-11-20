@@ -59,7 +59,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const state={
  running:false,score:0,best:0,playerX:0,playerZ:1.5,targetX:0,targetZ:1.5,
  tilt:0,pitch:0,beta0:null,reversePitch:false,gammaNeutral:null,forwardVelocity:0,
- motionCount:0,orientationCount:0,sensorState:'waiting',sensorError:'',lateralVelocity:0,
+ motionCount:0,orientationCount:0,sensorState:'waiting',sensorError:'',
  threshold:12,lastHit:0,lastMotionTime:0,lastAccel:null,
  ball:{x:0,y:.25,z:4,vx:0,vz:-7,active:false,phase:'serve',power:0},
  opponentX:0,opponentTarget:0,opponentSwing:0,
@@ -114,7 +114,7 @@ function startOpponentReturn(){
 function update(dt){
  if(!state.running)return;
  const t=1-Math.exp(-dt*5.5);
- state.playerX=lerp(state.playerX,state.targetX,t);state.playerZ=lerp(state.playerZ,state.targetZ,t); state.lateralVelocity=(state.lateralVelocity||0)*Math.pow(.12,dt); state.targetX=clamp(state.targetX+state.lateralVelocity*dt,-2.15,2.15);
+ state.playerX=lerp(state.playerX,state.targetX,t);state.playerZ=lerp(state.playerZ,state.targetZ,t); state.lateralVelocity*=Math.pow(.12,dt); state.targetX=clamp(state.targetX+state.lateralVelocity*dt,-2.15,2.15);
  state.opponentX=lerp(state.opponentX,state.opponentTarget,dt*2.8);
  state.racketSwing=Math.max(0,state.racketSwing-dt*3.7);state.opponentSwing=Math.max(0,state.opponentSwing-dt*2.5);
  state.shake=Math.max(0,state.shake-dt);state.roll=lerp(state.roll,-state.tilt*.06,dt*5);
@@ -146,20 +146,20 @@ function line(points,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ct
 function worldLine(a,b,color,width=1){const p=project(...a),q=project(...b);if(p&&q)line([p,q],color,width)}
 function drawCourt(){
  const W=innerWidth,H=innerHeight;
- // Screen-space geometry keeps the court visible independently of camera projection.
- const topY=H*.43,bottomY=H*.88,topW=Math.min(W*.56,420),bottomW=Math.min(W*.96,760),cx=W/2;
- const topL={x:cx-topW/2,y:topY},topR={x:cx+topW/2,y:topY},botL={x:cx-bottomW/2,y:bottomY},botR={x:cx+bottomW/2,y:bottomY};
- poly([topL,topR,botR,botL],'#126c8c');
- poly([{x:topL.x,y:topY-H*.12},{x:topR.x,y:topY-H*.12},topR,topL],'rgba(165,230,255,.11)');
- poly([{x:cx-bottomW*.56,y:bottomY},{x:topL.x,y:topY},{x:topL.x,y:topY-H*.12},{x:cx-bottomW*.56,y:bottomY-H*.02}],'rgba(175,225,255,.08)');
- poly([{x:topR.x,y:topY},{x:cx+bottomW*.56,y:bottomY},{x:cx+bottomW*.56,y:bottomY-H*.02},{x:topR.x,y:topY-H*.12}],'rgba(175,225,255,.08)');
- line([topL,topR,botR,botL,topL],'#e1faff',2);
- for(const t of [.25,.5,.75]){const y=lerp(topY,bottomY,t),w=lerp(topW,bottomW,t);line([{x:cx-w/2,y},{x:cx+w/2,y}],'#d8f6ff',t===.5?2:1.2)}
- for(const t of [.33,.67]){const xTop=lerp(topL.x,topR.x,t),xBot=lerp(botL.x,botR.x,t);line([{x:xTop,y:topY},{x:xBot,y:bottomY}],'#e1faff',1.2)}
- const netY=lerp(topY,bottomY,.5),netW=lerp(topW,bottomW,.5);
- ctx.fillStyle='rgba(8,19,30,.55)';ctx.fillRect(cx-netW/2,netY-H*.018,netW,H*.036);
- line([{x:cx-netW/2,y:netY-H*.018},{x:cx+netW/2,y:netY-H*.018}],'#f1fcff',2);
- for(let i=0;i<=24;i++){const x=cx-netW/2+netW*i/24;line([{x,y:netY-H*.018},{x,y:netY+H*.018}],'rgba(220,245,255,.4)',.5)}
+ const farL=project(-2.5,0,12),farR=project(2.5,0,12),nearL=project(-2.5,0,1.2),nearR=project(2.5,0,1.2);
+ if(farL&&farR&&nearL&&nearR){
+ poly([farL,farR,nearR,nearL],'#126c8c');
+ // court depth lines
+ for(const z of [-.5,1.83,6,10.17,12]){
+  worldLine([-2.5,.012,z],[2.5,.012,z],z===6?'#d8f6ff':'#e1faff',z===6?2:1.2)
+ }
+ for(const x of [-2.5,0,2.5])worldLine([x,.012,-.5],[x,.012,12],x===0?'#c1efff':'#e1faff',1.1);
+ // translucent glass rear and side panels
+ const gl=project(-2.5,3.1,12),gr=project(2.5,3.1,12);
+ if(gl&&gr)poly([farL,farR,gr,gl],'rgba(165,230,255,.12)');
+ const sl=project(-2.5,3.1,-.5),sr=project(2.5,3.1,-.5);
+ if(sl&&sr){poly([nearL,farL,gl,sl],'rgba(175,225,255,.09)');poly([nearR,farR,gr,sr],'rgba(175,225,255,.09)')}
+ }
 }
 function drawOpponent(){
  const x=state.opponentX,z=11.1;
