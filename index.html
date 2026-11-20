@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#080e18">
-<title>سلطان</title>
+<title>Padel</title>
 <style>
 :root{--bg:#080e18;--panel:#101a29;--accent:#b5ff45;--cyan:#4ce5ff;--text:#edf5ff;--muted:#8fa4bb}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;touch-action:none;-webkit-tap-highlight-color:transparent}
@@ -39,13 +39,13 @@ button.primary{background:var(--accent);color:#101710;border:0;font-weight:bold;
 <div class="bottom">
 <div class="panel"><div class="row"><label>قدرت ضربه</label><output id="powerText">۰٪</output></div><div style="height:5px;border-radius:9px;background:#28394a;overflow:hidden"><div id="powerBar" style="height:100%;width:0;background:var(--accent);transition:width .08s"></div></div></div>
 <div class="panel"><div class="row"><label for="threshold">حساسیت تکان</label><output id="thresholdText">۱۲</output></div><input id="threshold" type="range" min="5" max="30" step="1" value="12"></div>
-<div class="buttons"><button id="opponentServe">حریف ضربه بزند</button><button id="resetNeutral">تنظیم مجدد وضعیت</button><button id="manualHit">ضربه آزمایشی</button></div>
+<div class="buttons"><button id="resetNeutral">تنظیم مجدد وضعیت</button><button id="manualHit">ضربه آزمایشی</button></div>
 <div id="frameNotice"><div>برای کارکرد سنسورها، بازی باید خارج از iframe و در تب مستقیم مرورگر باز شود.</div><button id="openTab">باز کردن در تب جدید</button></div>
 </div>
 </div>
 <div id="startScreen"><div class="startCard">
-<div class="logo">SULTAN</div><h1>سلطان</h1>
-<p>گوشی را ایمن و بدون تاب‌دادن شدید نگه دار. با قدم‌های آرام جلو و عقب برو تا بازیکن در زمین جابه‌جا شود؛ چرخش کوتاه گوشی به چپ و راست برای ضربه است. در مرورگر موبایل و HTTPS اجرا می‌شود.</p>
+<div class="logo">PADEL</div><h1>Padel</h1>
+<p>گوشی را ایمن و بدون تاب‌دادن شدید نگه دار. با حرکت آرام به چپ و راست جابه‌جا شو و با تکان کنترل‌شده ضربه بزن. در مرورگر موبایل و HTTPS اجرا می‌شود.</p>
 <button class="primary" id="startBtn">شروع بازی</button>
 <div class="notice">برای کنترل حرکتی، هنگام شروع اجازه سنسورها را بده. در صورت نبود سنسور، کنترل لمسی / ماوس / کیبورد فعال می‌شود.</div>
 </div></div>
@@ -58,7 +58,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 const state={
  running:false,score:0,best:0,playerX:0,playerZ:1.5,targetX:0,targetZ:1.5,
- tilt:0,pitch:0,beta0:null,reversePitch:false,gammaNeutral:null,forwardVelocity:0,
+ tilt:0,pitch:0,beta0:null,reversePitch:false, lateral:0,lateralVelocity:0,lastStep:0,
  motionCount:0,orientationCount:0,sensorState:'waiting',sensorError:'',
  threshold:12,lastHit:0,lastMotionTime:0,lastAccel:null,
  ball:{x:0,y:.25,z:4,vx:0,vz:-7,active:false,phase:'serve',power:0},
@@ -83,12 +83,8 @@ function bounce(){tone(420,'sine',.09,.12,180)}
 function miss(){tone(350,'sine',.38,.22,90);noise(500,.2,.06)}
 function whoosh(){noise(650,.14,.045)}
 function resetBall(){
- // Wait for the user to press the opponent-serve button before rally starts.
- state.ball={x:state.opponentTarget*.45,y:.25,z:11.3,vx:0,vz:0,active:false,phase:'serve',power:0};
-}
-function opponentServe(){
- if(!state.running)return; state.opponentTarget=Math.random()*3.6-1.8; state.opponentSwing=1; state.ball={x:state.opponentTarget*.45,y:1.1,z:11.3,vx:(state.opponentTarget-state.playerX)*.35,vz:-state.baseSpeed,active:true,phase:'opponent',power:0};
- soundOpponent();message('حریف ضربه زد!',500);
+ state.ball={x:state.opponentTarget*.45,y:.25,z:11.3,vx:0,vz:-state.baseSpeed,active:true,phase:'opponent',power:0};
+ state.ball.vz=-state.baseSpeed;
 }
 state.baseSpeed=7;
 function gameOver(){
@@ -101,8 +97,8 @@ function successfulHit(mag=16){
  if(!state.running||!state.ball.active)return;
  const b=state.ball,delta=b.z-state.playerZ;
  if(b.vz>=0||delta<-1.4||delta>4.2||Math.abs(b.x-state.playerX)>=2.0){message('زمان ضربه نیست',350);return}
- const power=clamp(mag/30,0,1);b.phase='player';b.power=power;b.vx=(b.x-state.playerX)*2.4;b.vz=state.baseSpeed*(.9+power*.5);b.y=.9;b.z=Math.max(1.5,b.z);b.active=true;
- state.racketSwing=1;state.shake=.12;state.score++;state.baseSpeed=Math.min(13,state.baseSpeed+.3);if(state.score>state.best){state.best=state.score;try{localStorage.setItem('padel_motion_best',state.best)}catch(e){} $('best').textContent=state.best.toLocaleString('fa-IR');}
+ const power=clamp(mag/30,0,1);b.phase='player';b.power=power;b.vx=(b.x-state.playerX)*2.4+(state.tilt*.6);b.vz=state.baseSpeed*(.9+power*.5);b.y=.9;b.z=Math.max(1.5,b.z);b.active=true;
+ state.racketSwing=1;state.shake=.12;state.score++;state.baseSpeed=Math.min(13,state.baseSpeed+.3);
  $('score').textContent=state.score.toLocaleString('fa-IR');$('powerBar').style.width=(power*100)+'%';$('powerText').textContent=Math.round(power*100).toLocaleString('fa-IR')+'٪';
  soundHit(power);vibrate(35);message(state.score%5===0?'عالی!':'ضربه!',500);
 }
@@ -137,7 +133,7 @@ function update(dt){
  }
 }
 function project(X,Y,Z){
- const W=innerWidth,H=innerHeight,f=.55*W,horizon=.42*H,camZ=-2.0,d=Z-camZ;
+ const W=innerWidth,H=innerHeight,f=.55*W,horizon=.36*H,camZ=state.playerZ-1.6,d=Z-camZ;
  if(d<.05)return null;
  return {x:W/2+f*(X-state.playerX)/d,y:horizon+f*(1.6-Y)/d,d};
 }
@@ -146,7 +142,7 @@ function line(points,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ct
 function worldLine(a,b,color,width=1){const p=project(...a),q=project(...b);if(p&&q)line([p,q],color,width)}
 function drawCourt(){
  const W=innerWidth,H=innerHeight;
- const farL=project(-2.5,0,12),farR=project(2.5,0,12),nearL=project(-2.5,0,1.2),nearR=project(2.5,0,1.2);
+ const farL=project(-2.5,0,12),farR=project(2.5,0,12),nearL=project(-2.5,0,-.5),nearR=project(2.5,0,-.5);
  if(farL&&farR&&nearL&&nearR){
  poly([farL,farR,nearR,nearL],'#126c8c');
  // court depth lines
@@ -215,7 +211,7 @@ function render(){
  drawOpponent();
  if(state.ball.phase==='opponent')drawBall();
  drawNet();
- if(state.ball.phase==='player')drawBall();
+ if(state.ball.phase==='player'||state.ball.phase==='opponent')drawBall();
  drawRacket();
  ctx.restore();
 }
@@ -228,11 +224,13 @@ function debug(){
 }
 function onOrientation(e){
  state.orientationCount++;state.lastMotionTime=performance.now();
- if(typeof e.gamma==='number'){
-  const gamma=e.gamma;if(state.gammaNeutral===null)state.gammaNeutral=gamma;
-  const delta=gamma-state.gammaNeutral;state.tilt=clamp(delta/35,-1,1);
-  if(Math.abs(delta)>24&&performance.now()-state.lastHit>500){state.lastHit=performance.now();successfulHit(clamp(Math.abs(delta)*.55,12,30));state.gammaNeutral=gamma;}
+ if(typeof e.gamma==='number')state.tilt=clamp(e.gamma/35,-1,1);
+ if(typeof e.beta==='number'){
+  if(state.beta0===null)state.beta0=e.beta;
+  const diff=(e.beta-state.beta0)/30*(state.reversePitch?-1:1);
+  state.pitch=clamp(diff,-1,1);
  }
+ state.targetZ=clamp(1.5+state.pitch*2,-.5,3.5);
  state.sensorState='orientation active';debug();
 }
 function magnitude(e){
@@ -245,18 +243,27 @@ function magnitude(e){
 }
 function onMotion(e){
  state.motionCount++;state.lastMotionTime=performance.now();state.sensorState='motion active';
- const mag=magnitude(e),a=e.acceleration,forward=(a&&a.z!=null)?a.z:0;
- if(Math.abs(forward)>.75){state.forwardVelocity+=forward*.012;state.targetZ=clamp(state.targetZ+state.forwardVelocity*.08,-.45,3.4)}
- state.forwardVelocity*=.88;
- $('powerBar').style.width=clamp(mag/30*100,0,100)+'%';$('powerText').textContent=Math.round(clamp(mag/30*100,0,100)).toLocaleString('fa-IR')+'٪';debug();
+ const mag=magnitude(e); const ax=(e.acceleration&&e.acceleration.x!=null)?e.acceleration.x:((e.accelerationIncludingGravity&&e.accelerationIncludingGravity.x!=null)?e.accelerationIncludingGravity.x:0); if(Math.abs(ax)>1.35 && performance.now()-state.lastStep>220){state.lastStep=performance.now();state.lateralVelocity+=Math.sign(ax)*1.35;state.targetX=clamp(state.targetX+Math.sign(ax)*.42,-2.15,2.15);} $('powerBar').style.width=clamp(mag/30*100,0,100)+'%';$('powerText').textContent=Math.round(clamp(mag/30*100,0,100)).toLocaleString('fa-IR')+'٪';
+ if(mag>state.threshold&&performance.now()-state.lastHit>350){state.lastHit=performance.now();successfulHit(mag)}
+ debug();
 }
 function startFallbackSensors(){
- if(!('LinearAccelerationSensor'in window))return;
- try{const linear=new LinearAccelerationSensor({frequency:60});
- linear.addEventListener('reading',()=>{state.motionCount++;state.sensorState='generic sensor active';const mag=Math.hypot(linear.x,linear.y,linear.z);
- if(Math.abs(linear.z)>.75){state.forwardVelocity+=linear.z*.012;state.targetZ=clamp(state.targetZ+state.forwardVelocity*.08,-.45,3.4)}state.forwardVelocity*=.88;
- $('powerBar').style.width=clamp(mag/30*100,0,100)+'%';$('powerText').textContent=Math.round(clamp(mag/30*100,0,100)).toLocaleString('fa-IR')+'٪';debug();});
- linear.start();state.sensorState='generic sensor running';
+ if(!('LinearAccelerationSensor'in window)||!('GravitySensor'in window))return;
+ try{
+  const linear=new LinearAccelerationSensor({frequency:60}),gravity=new GravitySensor({frequency:60});
+  let g={x:0,y:0,z:0};
+  gravity.addEventListener('reading',()=>g={x:gravity.x,y:gravity.y,z:gravity.z});
+  linear.addEventListener('reading',()=>{
+   state.motionCount++;state.sensorState='generic sensor active';
+   const mag=Math.hypot(linear.x,linear.y,linear.z);
+   if(mag>state.threshold&&performance.now()-state.lastHit>350){state.lastHit=performance.now();successfulHit(mag)}
+   state.tilt=clamp(linear.x/5,-1,1);state.pitch=clamp(linear.y/5,-1,1);
+   state.targetZ=clamp(1.5+state.pitch*2,-.5,3.5);
+   debug();
+  });
+  linear.start();gravity.start();
+  state.sensorState='generic sensor running';
+  state.sensorError='اگر سنسورها فعال نیستند، Site settings > Motion sensors را Allow کنید';
  }catch(err){state.sensorError=err.message;state.sensorState='generic sensor blocked';debug()}
 }
 async function startGame(){
@@ -285,12 +292,15 @@ async function startGame(){
  debug();
 }
 $('startBtn').addEventListener('click',startGame);
-$('opponentServe').addEventListener('click',opponentServe);
 $('resetNeutral').addEventListener('click',()=>{state.beta0=null;state.targetX=0;state.targetZ=1.5;state.playerX=0;state.playerZ=1.5;state.tilt=0;state.pitch=0;message('وضعیت خنثی تنظیم شد')});
 $('manualHit').addEventListener('click',()=>successfulHit(18));
 $('openTab').addEventListener('click',()=>window.open(location.href,'_blank'));
 $('threshold').addEventListener('input',e=>{state.threshold=Number(e.target.value);$('thresholdText').textContent=state.threshold.toLocaleString('fa-IR')});
-canvas.addEventListener('pointermove',e=>{if(state.motionCount||state.orientationCount)return;state.mouseMode=true;state.targetX=clamp((e.clientX/innerWidth-.5)*4.3,-2.15,2.15);state.targetZ=clamp(1.5+(e.clientY/innerHeight-.5)*3,-.5,3.5);});
+canvas.addEventListener('pointermove',e=>{
+ if(state.motionCount||state.orientationCount)return;
+ state.mouseMode=true;state.tilt=clamp((e.clientX/innerWidth-.5)*2,-1,1);state.pitch=clamp((e.clientY/innerHeight-.5)*-2,-1,1);
+ state.targetX=state.tilt*2.2;state.targetZ=clamp(1.5+state.pitch*2,-.5,3.5);
+});
 let swipeX=null; canvas.addEventListener('pointerdown',e=>{swipeX=e.clientX;if(state.motionCount===0&&state.orientationCount===0)successfulHit(18)}); canvas.addEventListener('pointerup',e=>{if(swipeX!==null){const dx=e.clientX-swipeX;if(Math.abs(dx)>35)state.targetX=clamp(state.targetX+Math.sign(dx)*.7,-2.15,2.15);swipeX=null}});
 addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();successfulHit(18)}
