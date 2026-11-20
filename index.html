@@ -293,7 +293,8 @@ async function startGame(){
 }
 $('startBtn').addEventListener('click',startGame);
 $('resetNeutral').addEventListener('click',()=>{state.beta0=null;state.targetX=0;state.targetZ=1.5;state.playerX=0;state.playerZ=1.5;state.tilt=0;state.pitch=0;message('وضعیت خنثی تنظیم شد')});
-$('manualHit').addEventListener('click',()=>successfulHit(18));\n$('opponentStart').addEventListener('click',()=>{state.running=true;state.ball.active=false;state.opponentTarget=Math.random()*3.6-1.8;resetBall();message('حریف شروع کرد!',700);});
+$('manualHit').addEventListener('click',()=>successfulHit(18));
+$('opponentStart').addEventListener('click',()=>{state.running=true;state.ball.active=false;state.opponentTarget=Math.random()*3.6-1.8;resetBall();message('حریف شروع کرد!',700);});
 $('openTab').addEventListener('click',()=>window.open(location.href,'_blank'));
 $('threshold').addEventListener('input',e=>{state.threshold=Number(e.target.value);$('thresholdText').textContent=state.threshold.toLocaleString('fa-IR')});
 canvas.addEventListener('pointermove',e=>{
