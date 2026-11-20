@@ -142,11 +142,18 @@ function gpsEnable(){
  S.gps=true;$('#gpsBtn').textContent='خاموش‌کردن GPS';diag()
 }
 function gpsOff(){if(S.gpsWatch!=null)navigator.geolocation.clearWatch(S.gpsWatch);S.gpsWatch=null;S.gps=false;S.gpsForward=0;S.gpsNote='GPS خاموش شد';$('#gpsBtn').textContent='فعال‌کردن حرکت GPS';diag()}
-async function start(){
- audioInit();S.run=true;S.score=0;S.baseSpeed=6.8;S.beta0=null;S.lastHit=0;S.tilt=0;S.pitch=0;S.tx=0;S.tz=1.5;S.gpsForward=0;S.oppTarget=0;resetBall();$('#score').textContent='۰';$('#start').style.display='none';
- try{if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){let p=await DeviceMotionEvent.requestPermission();if(p!=='granted')S.gpsNote='اجازه Motion رد شد';}else if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){let p=await DeviceOrientationEvent.requestPermission();if(p!=='granted')S.gpsNote='اجازه Orientation رد شد'}}
- catch(e){S.gpsNote='Sensor permission: '+e.message}
- window.addEventListener('deviceorientation',orient);window.addEventListener('devicemotion',motion);diag()
+function start(){
+ audioInit();S.run=true;S.score=0;S.baseSpeed=6.8;S.beta0=null;S.lastHit=0;S.tilt=0;S.pitch=0;S.tx=0;S.tz=1.5;S.gpsForward=0;S.oppTarget=0;resetBall();$('#score').textContent='۰';$('#start').style.display='none';S.gpsNote='بازی شروع شد؛ اگر سنسورها فعال نشد، با لمس و کشیدن صفحه حرکت کن.';
+ // Register listeners immediately so a permission prompt cannot freeze game startup.
+ try{window.addEventListener('deviceorientation',orient);window.addEventListener('devicemotion',motion)}catch(e){S.gpsNote='سنسورها در این مرورگر در دسترس نیست'}
+ diag();
+ try{
+  if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+   DeviceMotionEvent.requestPermission().then(p=>{if(p!=='granted'){S.gpsNote='اجازه حرکت رد شد؛ کنترل لمسی فعال است';diag()}});
+  }else if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+   DeviceOrientationEvent.requestPermission().then(p=>{if(p!=='granted'){S.gpsNote='اجازه جهت رد شد؛ کنترل لمسی فعال است';diag()}});
+  }
+ }catch(e){S.gpsNote='اجازه سنسور داده نشد؛ کنترل لمسی فعال است';diag()}
 }
 $('#startBtn').addEventListener('click',start);
 $('#neutral').addEventListener('click',()=>{S.beta0=null;S.tx=0;S.tz=1.5+S.gpsForward;S.x=0;S.z=1.5;S.tilt=0;S.pitch=0;say('گوشی کالیبره شد')});
