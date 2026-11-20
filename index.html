@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#080e18">
-<title>Padel</title>
+<title>سلطان</title>
 <style>
 :root{--bg:#080e18;--panel:#101a29;--accent:#b5ff45;--cyan:#4ce5ff;--text:#edf5ff;--muted:#8fa4bb}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;touch-action:none;-webkit-tap-highlight-color:transparent}
@@ -44,7 +44,7 @@ button.primary{background:var(--accent);color:#101710;border:0;font-weight:bold;
 </div>
 </div>
 <div id="startScreen"><div class="startCard">
-<div class="logo">PADEL</div><h1>Padel</h1>
+<div class="logo">SULTAN</div><h1>سلطان</h1>
 <p>گوشی را ایمن و بدون تاب‌دادن شدید نگه دار. با قدم‌های آرام جلو و عقب برو تا بازیکن در زمین جابه‌جا شود؛ چرخش کوتاه گوشی به چپ و راست برای ضربه است. در مرورگر موبایل و HTTPS اجرا می‌شود.</p>
 <button class="primary" id="startBtn">شروع بازی</button>
 <div class="notice">برای کنترل حرکتی، هنگام شروع اجازه سنسورها را بده. در صورت نبود سنسور، کنترل لمسی / ماوس / کیبورد فعال می‌شود.</div>
@@ -215,7 +215,7 @@ function render(){
  drawOpponent();
  if(state.ball.phase==='opponent')drawBall();
  drawNet();
- if(state.ball.phase==='player'||state.ball.phase==='opponent')drawBall();
+ if(state.ball.phase==='player')drawBall();
  drawRacket();
  ctx.restore();
 }
