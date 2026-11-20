@@ -137,7 +137,7 @@ function update(dt){
  }
 }
 function project(X,Y,Z){
- const W=innerWidth,H=innerHeight,f=.55*W,horizon=.36*H,camZ=clamp(state.playerZ-1.6,-2.1,-1.5),d=Z-camZ;
+ const W=innerWidth,H=innerHeight,f=.55*W,horizon=.42*H,camZ=-2.0,d=Z-camZ;
  if(d<.05)return null;
  return {x:W/2+f*(X-state.playerX)/d,y:horizon+f*(1.6-Y)/d,d};
 }
@@ -146,7 +146,7 @@ function line(points,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ct
 function worldLine(a,b,color,width=1){const p=project(...a),q=project(...b);if(p&&q)line([p,q],color,width)}
 function drawCourt(){
  const W=innerWidth,H=innerHeight;
- const farL=project(-2.5,0,12),farR=project(2.5,0,12),nearL=project(-2.5,0,-.5),nearR=project(2.5,0,-.5);
+ const farL=project(-2.5,0,12),farR=project(2.5,0,12),nearL=project(-2.5,0,1.2),nearR=project(2.5,0,1.2);
  if(farL&&farR&&nearL&&nearR){
  poly([farL,farR,nearR,nearL],'#126c8c');
  // court depth lines
