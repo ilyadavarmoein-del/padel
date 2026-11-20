@@ -137,7 +137,7 @@ function update(dt){
  }
 }
 function project(X,Y,Z){
- const W=innerWidth,H=innerHeight,f=.55*W,horizon=.36*H,camZ=state.playerZ-1.6,d=Z-camZ;
+ const W=innerWidth,H=innerHeight,f=.55*W,horizon=.36*H,camZ=clamp(state.playerZ-1.6,-2.1,-1.5),d=Z-camZ;
  if(d<.05)return null;
  return {x:W/2+f*(X-state.playerX)/d,y:horizon+f*(1.6-Y)/d,d};
 }
