@@ -146,15 +146,19 @@ function line(points,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ct
 function worldLine(a,b,color,width=1){const p=project(...a),q=project(...b);if(p&&q)line([p,q],color,width)}
 function drawCourt(){
  const W=innerWidth,H=innerHeight;
- // Camera-following court section, plus a screen-space safety floor so the ground never vanishes.
- const camZ=state.playerZ-1.6,nearZ=camZ+1.6,farZ=12.5;
- const farL=project(-2.5,0,farZ),farR=project(2.5,0,farZ),nearL=project(-2.5,0,nearZ),nearR=project(2.5,0,nearZ);
- // Always paint a visible court floor in the lower screen area as a fallback.
- poly([{x:0,y:H*.48},{x:W,y:H*.48},{x:W,y:H},{x:0,y:H}],'#126c8c');
+ const farL=project(-2.5,0,12),farR=project(2.5,0,12),nearL=project(-2.5,0,-.5),nearR=project(2.5,0,-.5);
  if(farL&&farR&&nearL&&nearR){
-  poly([farL,farR,nearR,nearL],'#126c8c');
-  for(const z of [nearZ,6,10.17,farZ])if(z>nearZ&&z<farZ)worldLine([-2.5,.012,z],[2.5,.012,z],z===6?'#d8f6ff':'#e1faff',z===6?2:1.2);
-  for(const x of [-2.5,0,2.5])worldLine([x,.012,nearZ],[x,.012,farZ],x===0?'#c1efff':'#e1faff',1.1);
+ poly([farL,farR,nearR,nearL],'#126c8c');
+ // court depth lines
+ for(const z of [-.5,1.83,6,10.17,12]){
+  worldLine([-2.5,.012,z],[2.5,.012,z],z===6?'#d8f6ff':'#e1faff',z===6?2:1.2)
+ }
+ for(const x of [-2.5,0,2.5])worldLine([x,.012,-.5],[x,.012,12],x===0?'#c1efff':'#e1faff',1.1);
+ // translucent glass rear and side panels
+ const gl=project(-2.5,3.1,12),gr=project(2.5,3.1,12);
+ if(gl&&gr)poly([farL,farR,gr,gl],'rgba(165,230,255,.12)');
+ const sl=project(-2.5,3.1,-.5),sr=project(2.5,3.1,-.5);
+ if(sl&&sr){poly([nearL,farL,gl,sl],'rgba(175,225,255,.09)');poly([nearR,farR,gr,sr],'rgba(175,225,255,.09)')}
  }
 }
 function drawOpponent(){
