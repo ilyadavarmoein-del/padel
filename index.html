@@ -142,31 +142,20 @@ function line(points,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ct
 function worldLine(a,b,color,width=1){const p=project(...a),q=project(...b);if(p&&q)line([p,q],color,width)}
 function drawCourt(){
  const W=innerWidth,H=innerHeight;
- const farL=project(-2.5,0,12),farR=project(2.5,0,12),nearL=project(-2.5,0,-.5),nearR=project(2.5,0,-.5);
+ const farL=project(-2.5,0,12),farR=project(2.5,0,12),nearL=project(-2.5,0,-8),nearR=project(2.5,0,-8);
  if(farL&&farR&&nearL&&nearR){
  poly([farL,farR,nearR,nearL],'#126c8c');
  // court depth lines
- for(const z of [-.5,1.83,6,10.17,12]){
+ for(const z of [-8,-5,-.5,1.83,6,10.17,12]){
   worldLine([-2.5,.012,z],[2.5,.012,z],z===6?'#d8f6ff':'#e1faff',z===6?2:1.2)
  }
- for(const x of [-2.5,0,2.5])worldLine([x,.012,-.5],[x,.012,12],x===0?'#c1efff':'#e1faff',1.1);
+ for(const x of [-2.5,0,2.5])worldLine([x,.012,-8],[x,.012,12],x===0?'#c1efff':'#e1faff',1.1);
  // translucent glass rear and side panels
  const gl=project(-2.5,3.1,12),gr=project(2.5,3.1,12);
  if(gl&&gr)poly([farL,farR,gr,gl],'rgba(165,230,255,.12)');
  const sl=project(-2.5,3.1,-.5),sr=project(2.5,3.1,-.5);
  if(sl&&sr){poly([nearL,farL,gl,sl],'rgba(175,225,255,.09)');poly([nearR,farR,gr,sr],'rgba(175,225,255,.09)')}
  }
-}
-function drawGlassWalls(){
- const glassColor='rgba(195,235,255,.075)',frameColor='rgba(225,247,255,.48)';
- // 3D glass side walls and back wall with visible frame rails
- const sections=[[-2.5,3.2,-2.5,12], [2.5,3.2,2.5,12]];
- for(const [x,h,z1,z2] of sections){
-  const a=project(x,0,z1),b=project(x,0,z2),c=project(x,h,z2),d=project(x,h,z1);
-  if(a&&b&&c&&d){poly([a,b,c,d],glassColor);line([a,d,c,b,a],frameColor,1.8);for(let z=z1+2;z<z2;z+=2){const p=project(x,0,z),q=project(x,h,z);if(p&&q)line([p,q],'rgba(225,247,255,.24)',1)}}
- }
- const a=project(-2.5,0,12),b=project(2.5,0,12),c=project(2.5,3.2,12),d=project(-2.5,3.2,12);
- if(a&&b&&c&&d){poly([a,b,c,d],'rgba(190,235,255,.10)');line([a,d,c,b,a],frameColor,2);for(let x=-1.25;x<=1.25;x+=1.25){const p=project(x,0,12),q=project(x,3.2,12);if(p&&q)line([p,q],'rgba(225,247,255,.25)',1)}}
 }
 function drawOpponent(){
  const x=state.opponentX,z=11.1;
@@ -213,34 +202,12 @@ function drawRacket(){
  for(let yy=-36;yy<=36;yy+=18)for(let xx=-24;xx<=24;xx+=16){if((xx/16+yy/18)%2===0){ctx.beginPath();ctx.arc(xx,yy,3.2,0,Math.PI*2);ctx.fill()}}
  ctx.restore();
 }
-function drawOutdoorWorld(){
- const W=innerWidth,H=innerHeight,h=H*.36;
- // Outdoor sky, distant hills, trees and a small city silhouette visible through the glass
- const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#8bc9ed');sky.addColorStop(1,'#d7edfa');ctx.fillStyle=sky;ctx.fillRect(0,0,W,h);
- ctx.fillStyle='#9bbbd0';ctx.beginPath();ctx.moveTo(0,h);for(let x=0;x<=W;x+=W/8)ctx.lineTo(x,h*.64+Math.sin(x*.008)*h*.1);ctx.lineTo(W,h);ctx.fill();
- ctx.fillStyle='#7fa6b9';ctx.beginPath();ctx.moveTo(0,h);for(let x=0;x<=W;x+=W/10)ctx.lineTo(x,h*.78+Math.sin(x*.012+1)*h*.08);ctx.lineTo(W,h);ctx.fill();
- // skyline
- ctx.fillStyle='#8199a8';for(let i=0;i<15;i++){const x=i*W/15+W*.015,bw=W*.035,bh=h*(.12+(i%4)*.05);ctx.fillRect(x,h-bh,bw,bh);ctx.fillStyle='#b5c7d3';for(let y=h-bh+5;y<h-3;y+=9)ctx.fillRect(x+4,y,3,3);ctx.fillStyle='#8199a8'}
- // trees beyond the court
- for(let i=0;i<18;i++){const x=i*W/18+W*.01,base=h*.95,th=h*(.18+(i%3)*.05);ctx.fillStyle='#597f68';ctx.fillRect(x-2,base-th*.35,4,th*.35);ctx.fillStyle=i%2?'#4e8868':'#6a9c74';ctx.beginPath();ctx.arc(x,base-th*.65,th*.42,0,Math.PI*2);ctx.arc(x-th*.22,base-th*.55,th*.28,0,Math.PI*2);ctx.arc(x+th*.22,base-th*.55,th*.28,0,Math.PI*2);ctx.fill()}
- const ground=ctx.createLinearGradient(0,h,0,H);ground.addColorStop(0,'#82999c');ground.addColorStop(1,'#384f58');ctx.fillStyle=ground;ctx.fillRect(0,h,W,H-h);
- // Wide indoor floor that remains visible even when the camera moves toward the front
- ctx.fillStyle='#176887';ctx.beginPath();ctx.moveTo(W*.24,h);ctx.lineTo(W*.76,h);ctx.lineTo(W*1.2,H);ctx.lineTo(-W*.2,H);ctx.closePath();ctx.fill();
- ctx.strokeStyle='rgba(214,244,255,.16)';ctx.lineWidth=1;for(let i=0;i<12;i++){const y=h+(H-h)*i/11;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
- // Glass facade overlay: subtle tint, reflections and vertical mullions
- ctx.fillStyle='rgba(183,225,245,.055)';ctx.fillRect(0,h*.48,W,H-h*.48);
- ctx.strokeStyle='rgba(224,246,255,.24)';ctx.lineWidth=2;for(let i=0;i<=8;i++){const x=W*i/8;ctx.beginPath();ctx.moveTo(x,h*.48);ctx.lineTo(x,H);ctx.stroke()}
- ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,h*.48);ctx.lineTo(W,h*.48);ctx.stroke();
- // faint glass reflections
- const refl=ctx.createLinearGradient(0,h*.5,W*.5,H);refl.addColorStop(0,'rgba(255,255,255,.10)');refl.addColorStop(.45,'rgba(255,255,255,0)');refl.addColorStop(1,'rgba(130,210,255,.04)');ctx.fillStyle=refl;ctx.fillRect(0,h*.48,W,H-h*.48);
-}
 function render(){
  const W=innerWidth,H=innerHeight;
  ctx.clearRect(0,0,W,H);
- drawOutdoorWorld();
+ const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#091522');grad.addColorStop(.55,'#122c40');grad.addColorStop(1,'#06121d');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
  ctx.save();ctx.translate(W/2,H/2);ctx.rotate(state.roll);ctx.scale(1.12,1.12);ctx.translate(-W/2,-H/2);
  drawCourt();
- drawGlassWalls();
  drawOpponent();
  if(state.ball.phase==='opponent')drawBall();
  drawNet();
