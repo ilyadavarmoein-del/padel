@@ -39,7 +39,7 @@ button.primary{background:var(--accent);color:#101710;border:0;font-weight:bold;
 <div class="bottom">
 <div class="panel"><div class="row"><label>قدرت ضربه</label><output id="powerText">۰٪</output></div><div style="height:5px;border-radius:9px;background:#28394a;overflow:hidden"><div id="powerBar" style="height:100%;width:0;background:var(--accent);transition:width .08s"></div></div></div>
 <div class="panel"><div class="row"><label for="threshold">حساسیت تکان</label><output id="thresholdText">۱۲</output></div><input id="threshold" type="range" min="5" max="30" step="1" value="12"></div>
-<div class="buttons"><button id="resetNeutral">تنظیم مجدد وضعیت</button><button id="manualHit">ضربه آزمایشی</button></div>
+<div class="buttons"><button id="resetNeutral">تنظیم مجدد وضعیت</button><button id="manualHit">ضربه آزمایشی</button><button id="opponentStart" class="primary">شروع حریف</button></div>
 <div id="frameNotice"><div>برای کارکرد سنسورها، بازی باید خارج از iframe و در تب مستقیم مرورگر باز شود.</div><button id="openTab">باز کردن در تب جدید</button></div>
 </div>
 </div>
@@ -293,7 +293,7 @@ async function startGame(){
 }
 $('startBtn').addEventListener('click',startGame);
 $('resetNeutral').addEventListener('click',()=>{state.beta0=null;state.targetX=0;state.targetZ=1.5;state.playerX=0;state.playerZ=1.5;state.tilt=0;state.pitch=0;message('وضعیت خنثی تنظیم شد')});
-$('manualHit').addEventListener('click',()=>successfulHit(18));
+$('manualHit').addEventListener('click',()=>successfulHit(18));\n$('opponentStart').addEventListener('click',()=>{state.running=true;state.ball.active=false;state.opponentTarget=Math.random()*3.6-1.8;resetBall();message('حریف شروع کرد!',700);});
 $('openTab').addEventListener('click',()=>window.open(location.href,'_blank'));
 $('threshold').addEventListener('input',e=>{state.threshold=Number(e.target.value);$('thresholdText').textContent=state.threshold.toLocaleString('fa-IR')});
 canvas.addEventListener('pointermove',e=>{
