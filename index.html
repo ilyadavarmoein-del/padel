@@ -83,15 +83,15 @@ function bounce(){tone(420,'sine',.09,.12,180)}
 function miss(){tone(350,'sine',.38,.22,90);noise(500,.2,.06)}
 function whoosh(){noise(650,.14,.045)}
 function resetBall(){
- state.ball={x:state.opponentTarget*.45,y:.25,z:11.2,vx:0,vz:-state.baseSpeed||-7,active:true,phase:'serve',power:0};
+ state.ball={x:state.opponentTarget*.45,y:.25,z:11.3,vx:0,vz:-state.baseSpeed,active:true,phase:'opponent',power:0};
  state.ball.vz=-state.baseSpeed;
 }
 state.baseSpeed=7;
 function gameOver(){
- state.running=false;miss();vibrate(150);message('از دست رفت!  امتیاز: '+state.score.toLocaleString('fa-IR'),1300);
+ miss();vibrate(120);state.score=Math.max(0,state.score-1);message('توپ از دست رفت!  امتیاز: '+state.score.toLocaleString('fa-IR'),900);
  if(state.score>state.best){state.best=state.score;try{localStorage.setItem('padel_motion_best',state.best)}catch(e){}}
  $('score').textContent=state.score.toLocaleString('fa-IR');$('best').textContent=state.best.toLocaleString('fa-IR');
- setTimeout(()=>{state.score=0;state.baseSpeed=7;state.opponentTarget=(Math.random()*3.6-1.8);resetBall();state.running=true;$('score').textContent='۰'},1400);
+ state.baseSpeed=7;state.opponentTarget=(Math.random()*3.6-1.8);resetBall();state.running=true;
 }
 function successfulHit(mag=16){
  if(!state.running||!state.ball.active)return;
@@ -211,7 +211,7 @@ function render(){
  drawOpponent();
  if(state.ball.phase==='opponent')drawBall();
  drawNet();
- if(state.ball.phase==='player')drawBall();
+ if(state.ball.phase==='player'||state.ball.phase==='opponent')drawBall();
  drawRacket();
  ctx.restore();
 }
