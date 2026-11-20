@@ -98,7 +98,7 @@ function successfulHit(mag=16){
  const b=state.ball,delta=b.z-state.playerZ;
  if(b.vz>=0||delta<-1.4||delta>4.2||Math.abs(b.x-state.playerX)>=2.0){message('زمان ضربه نیست',350);return}
  const power=clamp(mag/30,0,1);b.phase='player';b.power=power;b.vx=(b.x-state.playerX)*2.4+(state.tilt*.6);b.vz=state.baseSpeed*(.9+power*.5);b.y=.9;b.z=Math.max(1.5,b.z);b.active=true;
- state.racketSwing=1;state.shake=.12;state.score++;state.baseSpeed=Math.min(13,state.baseSpeed+.3);
+ state.racketSwing=1;state.shake=.12;state.score++;state.baseSpeed=Math.min(13,state.baseSpeed+.3);if(state.score>state.best){state.best=state.score;try{localStorage.setItem('padel_motion_best',state.best)}catch(e){} $('best').textContent=state.best.toLocaleString('fa-IR');}
  $('score').textContent=state.score.toLocaleString('fa-IR');$('powerBar').style.width=(power*100)+'%';$('powerText').textContent=Math.round(power*100).toLocaleString('fa-IR')+'٪';
  soundHit(power);vibrate(35);message(state.score%5===0?'عالی!':'ضربه!',500);
 }
