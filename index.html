@@ -157,6 +157,17 @@ function drawCourt(){
  if(sl&&sr){poly([nearL,farL,gl,sl],'rgba(175,225,255,.09)');poly([nearR,farR,gr,sr],'rgba(175,225,255,.09)')}
  }
 }
+function drawGlassWalls(){
+ const glassColor='rgba(195,235,255,.075)',frameColor='rgba(225,247,255,.48)';
+ // 3D glass side walls and back wall with visible frame rails
+ const sections=[[-2.5,3.2,-2.5,12], [2.5,3.2,2.5,12]];
+ for(const [x,h,z1,z2] of sections){
+  const a=project(x,0,z1),b=project(x,0,z2),c=project(x,h,z2),d=project(x,h,z1);
+  if(a&&b&&c&&d){poly([a,b,c,d],glassColor);line([a,d,c,b,a],frameColor,1.8);for(let z=z1+2;z<z2;z+=2){const p=project(x,0,z),q=project(x,h,z);if(p&&q)line([p,q],'rgba(225,247,255,.24)',1)}}
+ }
+ const a=project(-2.5,0,12),b=project(2.5,0,12),c=project(2.5,3.2,12),d=project(-2.5,3.2,12);
+ if(a&&b&&c&&d){poly([a,b,c,d],'rgba(190,235,255,.10)');line([a,d,c,b,a],frameColor,2);for(let x=-1.25;x<=1.25;x+=1.25){const p=project(x,0,12),q=project(x,3.2,12);if(p&&q)line([p,q],'rgba(225,247,255,.25)',1)}}
+}
 function drawOpponent(){
  const x=state.opponentX,z=11.1;
  const head=project(x,2.05,z),body=project(x,1.25,z),feet=project(x,.1,z),left=project(x-.35,1.2,z),right=project(x+.35,1.2,z);
@@ -229,6 +240,7 @@ function render(){
  drawOutdoorWorld();
  ctx.save();ctx.translate(W/2,H/2);ctx.rotate(state.roll);ctx.scale(1.12,1.12);ctx.translate(-W/2,-H/2);
  drawCourt();
+ drawGlassWalls();
  drawOpponent();
  if(state.ball.phase==='opponent')drawBall();
  drawNet();
