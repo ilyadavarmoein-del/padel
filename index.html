@@ -45,7 +45,7 @@ button.primary{background:var(--accent);color:#101710;border:0;font-weight:bold;
 </div>
 <div id="startScreen"><div class="startCard">
 <div class="logo">PADEL</div><h1>Padel</h1>
-<p>گوشی را مثل راکت بگیر. با کج‌کردن آن حرکت کن و با تکان سریع ضربه بزن. در مرورگر موبایل و HTTPS اجرا می‌شود.</p>
+<p>گوشی را ایمن و بدون تاب‌دادن شدید نگه دار. با حرکت آرام به چپ و راست جابه‌جا شو و با تکان کنترل‌شده ضربه بزن. در مرورگر موبایل و HTTPS اجرا می‌شود.</p>
 <button class="primary" id="startBtn">شروع بازی</button>
 <div class="notice">برای کنترل حرکتی، هنگام شروع اجازه سنسورها را بده. در صورت نبود سنسور، کنترل لمسی / ماوس / کیبورد فعال می‌شود.</div>
 </div></div>
@@ -58,7 +58,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 const state={
  running:false,score:0,best:0,playerX:0,playerZ:1.5,targetX:0,targetZ:1.5,
- tilt:0,pitch:0,beta0:null,reversePitch:false,
+ tilt:0,pitch:0,beta0:null,reversePitch:false, lateral:0,lateralVelocity:0,lastStep:0,
  motionCount:0,orientationCount:0,sensorState:'waiting',sensorError:'',
  threshold:12,lastHit:0,lastMotionTime:0,lastAccel:null,
  ball:{x:0,y:.25,z:4,vx:0,vz:-7,active:false,phase:'serve',power:0},
@@ -96,7 +96,7 @@ function gameOver(){
 function successfulHit(mag=16){
  if(!state.running||!state.ball.active)return;
  const b=state.ball,delta=b.z-state.playerZ;
- if(b.vz>=0||delta<-.8||delta>2.8||Math.abs(b.x-state.playerX)>=1.25){message('نزدیک‌تر شو!',450);return}
+ if(b.vz>=0||delta<-1.4||delta>4.2||Math.abs(b.x-state.playerX)>=2.0){message('زمان ضربه نیست',350);return}
  const power=clamp(mag/30,0,1);b.phase='player';b.power=power;b.vx=(b.x-state.playerX)*2.4+(state.tilt*.6);b.vz=state.baseSpeed*(.9+power*.5);b.y=.9;b.z=Math.max(1.5,b.z);b.active=true;
  state.racketSwing=1;state.shake=.12;state.score++;state.baseSpeed=Math.min(13,state.baseSpeed+.3);
  $('score').textContent=state.score.toLocaleString('fa-IR');$('powerBar').style.width=(power*100)+'%';$('powerText').textContent=Math.round(power*100).toLocaleString('fa-IR')+'٪';
@@ -110,7 +110,7 @@ function startOpponentReturn(){
 function update(dt){
  if(!state.running)return;
  const t=1-Math.exp(-dt*5.5);
- state.playerX=lerp(state.playerX,state.targetX,t);state.playerZ=lerp(state.playerZ,state.targetZ,t);
+ state.playerX=lerp(state.playerX,state.targetX,t);state.playerZ=lerp(state.playerZ,state.targetZ,t); state.lateralVelocity*=Math.pow(.12,dt); state.targetX=clamp(state.targetX+state.lateralVelocity*dt,-2.15,2.15);
  state.opponentX=lerp(state.opponentX,state.opponentTarget,dt*2.8);
  state.racketSwing=Math.max(0,state.racketSwing-dt*3.7);state.opponentSwing=Math.max(0,state.opponentSwing-dt*2.5);
  state.shake=Math.max(0,state.shake-dt);state.roll=lerp(state.roll,-state.tilt*.06,dt*5);
@@ -230,7 +230,7 @@ function onOrientation(e){
   const diff=(e.beta-state.beta0)/30*(state.reversePitch?-1:1);
   state.pitch=clamp(diff,-1,1);
  }
- state.targetX=state.tilt*2.2;state.targetZ=clamp(1.5+state.pitch*2,-.5,3.5);
+ state.targetZ=clamp(1.5+state.pitch*2,-.5,3.5);
  state.sensorState='orientation active';debug();
 }
 function magnitude(e){
@@ -243,7 +243,7 @@ function magnitude(e){
 }
 function onMotion(e){
  state.motionCount++;state.lastMotionTime=performance.now();state.sensorState='motion active';
- const mag=magnitude(e);$('powerBar').style.width=clamp(mag/30*100,0,100)+'%';$('powerText').textContent=Math.round(clamp(mag/30*100,0,100)).toLocaleString('fa-IR')+'٪';
+ const mag=magnitude(e); const ax=(e.acceleration&&e.acceleration.x!=null)?e.acceleration.x:((e.accelerationIncludingGravity&&e.accelerationIncludingGravity.x!=null)?e.accelerationIncludingGravity.x:0); if(Math.abs(ax)>1.35 && performance.now()-state.lastStep>220){state.lastStep=performance.now();state.lateralVelocity+=Math.sign(ax)*1.35;state.targetX=clamp(state.targetX+Math.sign(ax)*.42,-2.15,2.15);} $('powerBar').style.width=clamp(mag/30*100,0,100)+'%';$('powerText').textContent=Math.round(clamp(mag/30*100,0,100)).toLocaleString('fa-IR')+'٪';
  if(mag>state.threshold&&performance.now()-state.lastHit>350){state.lastHit=performance.now();successfulHit(mag)}
  debug();
 }
@@ -258,7 +258,7 @@ function startFallbackSensors(){
    const mag=Math.hypot(linear.x,linear.y,linear.z);
    if(mag>state.threshold&&performance.now()-state.lastHit>350){state.lastHit=performance.now();successfulHit(mag)}
    state.tilt=clamp(linear.x/5,-1,1);state.pitch=clamp(linear.y/5,-1,1);
-   state.targetX=state.tilt*2.2;state.targetZ=clamp(1.5+state.pitch*2,-.5,3.5);
+   state.targetZ=clamp(1.5+state.pitch*2,-.5,3.5);
    debug();
   });
   linear.start();gravity.start();
@@ -301,7 +301,7 @@ canvas.addEventListener('pointermove',e=>{
  state.mouseMode=true;state.tilt=clamp((e.clientX/innerWidth-.5)*2,-1,1);state.pitch=clamp((e.clientY/innerHeight-.5)*-2,-1,1);
  state.targetX=state.tilt*2.2;state.targetZ=clamp(1.5+state.pitch*2,-.5,3.5);
 });
-canvas.addEventListener('pointerdown',e=>{if(state.motionCount===0&&state.orientationCount===0)successfulHit(18)});
+let swipeX=null; canvas.addEventListener('pointerdown',e=>{swipeX=e.clientX;if(state.motionCount===0&&state.orientationCount===0)successfulHit(18)}); canvas.addEventListener('pointerup',e=>{if(swipeX!==null){const dx=e.clientX-swipeX;if(Math.abs(dx)>35)state.targetX=clamp(state.targetX+Math.sign(dx)*.7,-2.15,2.15);swipeX=null}});
 addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();successfulHit(18)}
  const step=.3;if(e.key==='ArrowLeft')state.targetX=clamp(state.targetX-step,-2.2,2.2);if(e.key==='ArrowRight')state.targetX=clamp(state.targetX+step,-2.2,2.2);if(e.key==='ArrowUp')state.targetZ=clamp(state.targetZ+.3,-.5,3.5);if(e.key==='ArrowDown')state.targetZ=clamp(state.targetZ-.3,-.5,3.5);
