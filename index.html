@@ -202,10 +202,31 @@ function drawRacket(){
  for(let yy=-36;yy<=36;yy+=18)for(let xx=-24;xx<=24;xx+=16){if((xx/16+yy/18)%2===0){ctx.beginPath();ctx.arc(xx,yy,3.2,0,Math.PI*2);ctx.fill()}}
  ctx.restore();
 }
+function drawOutdoorWorld(){
+ const W=innerWidth,H=innerHeight,h=H*.36;
+ // Outdoor sky, distant hills, trees and a small city silhouette visible through the glass
+ const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#8bc9ed');sky.addColorStop(1,'#d7edfa');ctx.fillStyle=sky;ctx.fillRect(0,0,W,h);
+ ctx.fillStyle='#9bbbd0';ctx.beginPath();ctx.moveTo(0,h);for(let x=0;x<=W;x+=W/8)ctx.lineTo(x,h*.64+Math.sin(x*.008)*h*.1);ctx.lineTo(W,h);ctx.fill();
+ ctx.fillStyle='#7fa6b9';ctx.beginPath();ctx.moveTo(0,h);for(let x=0;x<=W;x+=W/10)ctx.lineTo(x,h*.78+Math.sin(x*.012+1)*h*.08);ctx.lineTo(W,h);ctx.fill();
+ // skyline
+ ctx.fillStyle='#8199a8';for(let i=0;i<15;i++){const x=i*W/15+W*.015,bw=W*.035,bh=h*(.12+(i%4)*.05);ctx.fillRect(x,h-bh,bw,bh);ctx.fillStyle='#b5c7d3';for(let y=h-bh+5;y<h-3;y+=9)ctx.fillRect(x+4,y,3,3);ctx.fillStyle='#8199a8'}
+ // trees beyond the court
+ for(let i=0;i<18;i++){const x=i*W/18+W*.01,base=h*.95,th=h*(.18+(i%3)*.05);ctx.fillStyle='#597f68';ctx.fillRect(x-2,base-th*.35,4,th*.35);ctx.fillStyle=i%2?'#4e8868':'#6a9c74';ctx.beginPath();ctx.arc(x,base-th*.65,th*.42,0,Math.PI*2);ctx.arc(x-th*.22,base-th*.55,th*.28,0,Math.PI*2);ctx.arc(x+th*.22,base-th*.55,th*.28,0,Math.PI*2);ctx.fill()}
+ const ground=ctx.createLinearGradient(0,h,0,H);ground.addColorStop(0,'#82999c');ground.addColorStop(1,'#384f58');ctx.fillStyle=ground;ctx.fillRect(0,h,W,H-h);
+ // Wide indoor floor that remains visible even when the camera moves toward the front
+ ctx.fillStyle='#176887';ctx.beginPath();ctx.moveTo(W*.24,h);ctx.lineTo(W*.76,h);ctx.lineTo(W*1.2,H);ctx.lineTo(-W*.2,H);ctx.closePath();ctx.fill();
+ ctx.strokeStyle='rgba(214,244,255,.16)';ctx.lineWidth=1;for(let i=0;i<12;i++){const y=h+(H-h)*i/11;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ // Glass facade overlay: subtle tint, reflections and vertical mullions
+ ctx.fillStyle='rgba(183,225,245,.055)';ctx.fillRect(0,h*.48,W,H-h*.48);
+ ctx.strokeStyle='rgba(224,246,255,.24)';ctx.lineWidth=2;for(let i=0;i<=8;i++){const x=W*i/8;ctx.beginPath();ctx.moveTo(x,h*.48);ctx.lineTo(x,H);ctx.stroke()}
+ ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,h*.48);ctx.lineTo(W,h*.48);ctx.stroke();
+ // faint glass reflections
+ const refl=ctx.createLinearGradient(0,h*.5,W*.5,H);refl.addColorStop(0,'rgba(255,255,255,.10)');refl.addColorStop(.45,'rgba(255,255,255,0)');refl.addColorStop(1,'rgba(130,210,255,.04)');ctx.fillStyle=refl;ctx.fillRect(0,h*.48,W,H-h*.48);
+}
 function render(){
  const W=innerWidth,H=innerHeight;
  ctx.clearRect(0,0,W,H);
- const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#091522');grad.addColorStop(.55,'#122c40');grad.addColorStop(1,'#06121d');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+ drawOutdoorWorld();
  ctx.save();ctx.translate(W/2,H/2);ctx.rotate(state.roll);ctx.scale(1.12,1.12);ctx.translate(-W/2,-H/2);
  drawCourt();
  drawOpponent();
